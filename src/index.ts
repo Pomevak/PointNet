@@ -69,19 +69,22 @@ class PointNet {
     await tfvis.show.modelSummary({ name: "Model Architecture" }, this.model);
 
     const metrics = ["loss", "val_loss", "acc", "val_acc"];
-    const container = {
-      name: "Model Training"
-    };
-    const fitCallbacks = tfvis.show.fitCallbacks(container, metrics);
+    const fitCallbacks = tfvis.show.fitCallbacks(
+      { name: "Model Training" },
+      metrics
+    );
 
     return this.model.fitDataset(trainDataset, {
       epochs: 1,
-      callbacks: [fitCallbacks, {
-        async onBatchEnd() {
-          const info = tf.memory();
-          console.log(`numTensors: ${info.numTensors}`)
+      callbacks: [
+        fitCallbacks,
+        {
+          async onBatchEnd() {
+            const info = tf.memory();
+            console.log(`numTensors: ${info.numTensors}`);
+          }
         }
-      }],
+      ]
     });
   }
 }
