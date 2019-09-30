@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
-import { loadCategories, trainDataset } from "./data";
+import ModelNet from "./data";
 
 async function main() {
   if (await tf.setBackend("webgl")) {
@@ -12,9 +12,11 @@ async function main() {
 
 class PointNet {
   model?: tf.Sequential;
+  dataset?: ModelNet;
 
   async init() {
-    const categories = await loadCategories();
+    this.dataset = await ModelNet.init();
+
     this.model = tf.sequential({
       layers: [
         // mlp1
@@ -50,7 +52,7 @@ class PointNet {
         tf.layers.batchNormalization(),
         tf.layers.activation({ activation: "relu" }),
         tf.layers.dropout({ rate: 0.3 }),
-        tf.layers.dense({ units: categories.length }),
+        tf.layers.dense({ units: this.dataset.categories.length }),
         tf.layers.batchNormalization(),
         tf.layers.activation({ activation: "softmax" })
       ]
@@ -65,16 +67,16 @@ class PointNet {
   }
 
   async train() {
-    if (!this.model) return;
-    await tfvis.show.modelSummary({ name: "Model Architecture" }, this.model);
+    if (!this.model || !this.dataset) return;
 
+    await tfvis.show.modelSummary({ name: "Model Architecture" }, this.model);
     const metrics = ["loss", "val_loss", "acc", "val_acc"];
     const fitCallbacks = tfvis.show.fitCallbacks(
       { name: "Model Training" },
       metrics
     );
 
-    return this.model.fitDataset(trainDataset, {
+    return this.model.fitDataset(this.dataset.train, {
       epochs: 1,
       callbacks: [
         fitCallbacks,
@@ -89,4 +91,4 @@ class PointNet {
   }
 }
 
-main();
+setTimeout(main, 5000);
